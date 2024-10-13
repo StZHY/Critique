@@ -59,7 +59,7 @@ class Logger(object):
 
 if __name__ == '__main__':
     """fix the random seed"""
-    seed = 2023
+    seed = 2024
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
