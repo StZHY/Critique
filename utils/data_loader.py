@@ -84,7 +84,6 @@ def build_graph(train_data, triplets):
 
     print("\nBegin to load knowledge graph triples ...")
     for h_id, r_id, t_id in tqdm(triplets, ascii=True):
-        #为节点添加边
         ckg_graph.add_edge(h_id, t_id, key=r_id)
         rd[r_id].append([h_id, t_id])
 
@@ -93,7 +92,6 @@ def build_graph(train_data, triplets):
 
 def build_sparse_relational_graph(relation_dict):
     def _bi_norm_lap(adj):
-        #对称邻接矩阵的正则化
         # D^{-1/2}AD^{-1/2}
         rowsum = np.array(adj.sum(1))
 
@@ -145,8 +143,8 @@ def load_data(model_args):
     directory = args.data_path + args.dataset + '/'
 
     print('reading train and test user-item set ...')
-    train_cf = read_cf(directory + 'train_renew.txt')
-    test_cf = read_cf(directory + 'test_renew.txt')
+    train_cf = read_cf(directory + 'train.txt')
+    test_cf = read_cf(directory + 'test.txt')
     remap_item(train_cf, test_cf)
 
     print('combinating train_cf and kg data ...')

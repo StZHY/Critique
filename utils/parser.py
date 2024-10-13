@@ -2,10 +2,10 @@ import argparse
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="KGIN")
+    parser = argparse.ArgumentParser(description="RISC_KGIN")
 
     # ===== dataset ===== #
-    parser.add_argument("--dataset", nargs="?", default="last-fm", help="Choose a dataset:[last-fm,amazon-book,alibaba]")
+    parser.add_argument("--dataset", nargs="?", default="last-fm", help="Choose a dataset:[last-fm,movie,alibaba]")
     parser.add_argument(
         "--data_path", nargs="?", default="../data/", help="Input data path."
     )
@@ -47,19 +47,12 @@ def parse_args():
     parser.add_argument('--cri_batch_size', type=int, default=4096, help='batch size')
     parser.add_argument('--cri_lr', type=float, default=0.001, help='critique_learning rate')
     parser.add_argument('--cri_key_rank_num', type=int, default=5, help='number of need rank keyphrase')
-    parser.add_argument('--reg_lambda', type=float, default=1e-3, help='Omega regularization')
-    parser.add_argument("--using_omega", type=bool, default=False, help="using omega or not")
-    parser.add_argument("--using_replay", type=int, default=1, help="using omega or not")
     parser.add_argument('--count_nhop', type=int, default=1, help='considering how many hops of cri_keyphrase')
-    parser.add_argument('--walk_steps', type=int, default=1, help='random walk steps')
     parser.add_argument('--rand_item_num', type=int, default=10, help='random chosen item num')
 
     parser.add_argument('--imp_sample', type=str, default='gat', help='method of importance sample: cosine, gat')
-
-    parser.add_argument('--jaccard_method', type=str, default='simple', help='method of jaccard score: simple, weight+simple, apart')
     parser.add_argument('--disjointed_constant', type=int, default=1000, help='the constat of disjointed items jaccard score')
     parser.add_argument('--jaccard_neib', type=int, default=1, help='how many neighbor hops for jaccard score')
-
     parser.add_argument('--replay_decay', type=float, default=0.001, help='critique_learning rate')
     parser.add_argument('--replay_pairs_num', type=int, default=1, help='number of replay pairs num for every critiquing key')
 

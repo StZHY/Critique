@@ -170,10 +170,7 @@ def load_kg(model_args):
     
     with open(directory + "entity_neighbor_1_hop.pkl", "rb") as f:
         entity_neighbor_1_hop = pickle.load(f)
-    with open(directory + "entity_neighbor_2_hop.pkl", "rb") as f:
-        entity_neighbor_2_hop = pickle.load(f)
     
-
     with open(directory + "entity2item.pkl", "rb") as f:
         entity2item = pickle.load(f)
     with open(directory + "item2entity.pkl", "rb") as f:

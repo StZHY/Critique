@@ -54,7 +54,6 @@ def ranklist_by_sorted(user_pos_test, test_items, rating, Ks):
         item_score[i] = rating[i]
 
     K_max = max(Ks)
-    #找到item list rating中最大的 k 个元素
     K_max_item_score = heapq.nlargest(K_max, item_score, key=item_score.get)
 
     r = []
