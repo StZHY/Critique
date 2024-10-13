@@ -73,8 +73,9 @@ def cosine_importance_sampling(cri_key, entity2item, entity_emb, user_emb):
             user_tensor = user_emb.weight[user].unsqueeze(0).detach().cpu()
 
             cosine_sim = torch.nn.functional.cosine_similarity(entity_tensor, items_tensor, dim=1)
-            uv_score = torch.nn.Sigmoid()(torch.mean(torch.mul(user_tensor, items_tensor), dim=-1))
-            p_1 = torch.mul(cosine_sim, uv_score)
+            y_uv = torch.log(1 - torch.nn.Sigmoid()(torch.mul(user_tensor, items_tensor)))
+            score = torch.abs(torch.mean(y_uv, dim =-1))
+            p_1 = torch.mul(cosine_sim, score)
             p_1 = torch.clamp(p_1 / torch.sum(p_1), min=0)
 
             sampler = torch.distributions.Categorical(p_1)
@@ -117,89 +118,7 @@ def gat_importance_sampling(cri_key, entity2item, entity_emb, user_emb):
                 cri_user_cf.append([user, sample_item])
 
     return cri_user_cf 
-
-def exp_importance_sampling(cri_key, entity2item, entity_emb, user_emb):
-    cri_user_cf = []
-
-    for user, keys in cri_key.items():
-        for key in keys:
-
-            if key not in entity2item:
-                continue
-
-            around_items = entity2item[key]
-
-            entity_tensor = entity_emb.weight[key].unsqueeze(0).detach().cpu()
-            items_tensor = entity_emb.weight[around_items].detach().cpu()
-            user_tensor = user_emb.weight[user].unsqueeze(0).detach().cpu()
-
-
-            #attention = torch.exp(torch.mul(entity_tensor, items_tensor))
-            attention = torch.mul(entity_tensor, items_tensor)
-            attention_norm = torch.mean(torch.nn.functional.softmax(attention, dim=0), dim=-1)
-
-            uv_score = torch.mean(torch.nn.Sigmoid()(torch.mul(user_tensor, items_tensor)), dim =-1)
-
-            p_1 = torch.mul(attention_norm, uv_score)
-            p_1 = p_1 / torch.sum(p_1)
-
-            sampler = torch.distributions.Categorical(logits=p_1)
-
-            for i in range(args.rand_item_num):
-                sample_item = around_items[sampler.sample()]
-                cri_user_cf.append([user, sample_item])
-
-    return cri_user_cf 
-
-
-def get_replay_random_neg_cf(train_user_set, n_items):
-
-    replay_user_neg_cf = []
-
-    for user, _ in train_user_set.items():
-        while True:
-            neg_item = np.random.randint(low=0, high=n_items, size=1)[0]
-            if neg_item not in train_user_set[user]:
-                break
-        replay_user_neg_cf.append([user, neg_item])
-
-    return replay_user_neg_cf 
     
-def cal_pos_prob4cri(cri_key, train_user_set, entity_neighbors):
-
-    pos_prob4cri = {}
-    for user, keys in cri_key.items():
-
-        all_keys_neighbor = []
-        for key in keys:
-            all_keys_neighbor.append(list(entity_neighbors[key]))
-        
-        all_keys_neighbors_set = list(set([i for sublist in all_keys_neighbor for i in sublist]))
-        
-        item_jaccard_score = []
-        for item in train_user_set[user]:
-            intersec = entity_neighbors[item].intersection(all_keys_neighbors_set)
-            comb = set(list(entity_neighbors[item]) + all_keys_neighbors_set)
-            if len(intersec) == 0:
-                jaccard_num_inv = args.disjointed_constant
-            else:
-                jaccard_num_inv = len(comb) / len(intersec)
-            item_jaccard_score.append(jaccard_num_inv)
-
-        item_jaccard_score = np.array(item_jaccard_score)
-        item_jaccard_score = item_jaccard_score / item_jaccard_score.sum()
-        
-        pos_prob4cri[user] = item_jaccard_score
-    
-    return pos_prob4cri
-
-def get_pos_cf(neg_cf, train_user_set, items_prob):
-
-    pos_cf = []
-    for user, neg in neg_cf:
-        pos_item = np.random.choice(train_user_set[user], p=items_prob[user], replace=True)
-        pos_cf.append([user, pos_item, neg])
-    return pos_cf
 
 def replay_get_pos_cf(neg_cf, n_params):
 
@@ -301,23 +220,10 @@ if __name__ == "__main__":
 
         simulate_critiquing_e_t = time()
 
-        """we need to generate pos items for the replay neg cf and the cri cf, respectively. And finally stack them and shuffle.
-           The pos items for critiquing items that we want these are less similar with the critiuqing keys in user train data;
-           And the pos items for replay neg should use the KG to find the mostly representative items for the train_set , Or means those can
-           make the user embedding bestly remember the knowledge of original model.
-        """
-        # calculate pos items sample prob for critiquing and generate the [user, pos, neg] cf
-        # pos_prob4cri = cal_pos_prob4cri(critiquing_key, user_dict['train_user_set'], entity_neighbors)
-        # cri_cf = get_pos_cf(important_sample_cf, user_dict['train_user_set'], pos_prob4cri)
         cri_cf = replay_get_pos_cf(important_sample_cf, n_params)
 
-        # sample pos items for replay ,generate the [user, pos, neg] cf。
-        #replay_cf = get_pos_cf(replay_user_neg_cf, user_dict['train_user_set'], pos_prob4replay)
-        # using the simple way
-        # replay_cf = replay_get_pos_cf(replay_user_neg_cf, n_params)
-
         cri_cf_pairs = torch.LongTensor(np.array([[cf[0], cf[1], cf[2]] for cf in cri_cf], np.int32))
-        #replay_neg_cf_pairs = torch.LongTensor(np.array([[cf[0], cf[1], cf[2]] for cf in replay_cf], np.int32))
+
 
         index = np.arange(len(cri_cf_pairs))
         np.random.shuffle(index)
@@ -336,30 +242,6 @@ if __name__ == "__main__":
 
             cri_loss += bpr_loss
             cri_s += args.cri_batch_size
-        """
-
-        if args.using_replay:
-            index = np.arange(len(replay_neg_cf_pairs))
-            np.random.shuffle(index)
-            replay_neg_cf_pairs = replay_neg_cf_pairs[index]
-
-            replay_s = 0
-            while replay_s + args.cri_batch_size <= len(replay_neg_cf_pairs):
-                    
-                cri_batch = feed_dict(replay_neg_cf_pairs, replay_s, replay_s + args.cri_batch_size)
-            
-                bpr_loss = args.replay_decay * cri_model(cri_batch)
-
-                cri_optimizer.zero_grad()
-                bpr_loss.backward()
-                cri_optimizer.step()
-
-                cri_loss += bpr_loss
-                replay_s += args.cri_batch_size
-        """
-
-        """ending time """
-        
 
         simulate_score_s_t = time()
         simulate_ret = test(cri_model, user_dict, n_params)
