@@ -41,23 +41,6 @@ RISC/
 - Appends a weighted-average item embedding per user (Jaccard-based replay probability) as replay positive samples.
 - Fine-tunes user embeddings via BPR: push users toward positive items and away from critique keyphrases.
 
-## Key Arguments
-
-| Argument | Default | Description |
-|---|---|---|
-| `--dataset` | `last-fm` | Dataset name (last-fm, movie, alibaba) |
-| `--dim` | 64 | Embedding dimension |
-| `--lr` | 1e-4 | Learning rate for KGIN |
-| `--epoch` | 1000 | Training epochs for KGIN |
-| `--n_factors` | 4 | Number of disentangled latent factors |
-| `--ind` | `distance` | Independence modeling (mi, distance, cosine) |
-| `--context_hops` | 3 | GCN propagation hops |
-| `--cri_lr` | 0.001 | Learning rate for critiquing |
-| `--cri_epoch` | 10 | Critiquing training epochs |
-| `--imp_sample` | `gat` | Importance sampling method (cosine, gat) |
-| `--cri_key_rank_num` | 5 | Top-K critique keyphrases per user |
-| `--rand_item_num` | 10 | Sampled items per critique keyphrase |
-
 ## Quick Start
 
 ```bash
