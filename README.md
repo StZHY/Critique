@@ -1,6 +1,5 @@
-# RISC: Recommender with Interactive Critiquing
+# RISC: Recommender with Critiquing
 
-RISC is a knowledge graph-based recommendation framework that enhances the **KGIN** (Knowledge Graph-based Disentangled Recommendation) model with a **critiquing** mechanism. After a base recommender is trained, RISC simulates user critiquing feedback (keyphrase-level preferences) and fine-tunes user embeddings through importance sampling, improving recommendation quality without requiring explicit user feedback.
 
 ## Project Structure
 
