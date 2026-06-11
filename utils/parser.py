@@ -1,0 +1,60 @@
+import argparse
+
+
+def parse_args():
+    """Parse command-line arguments for RISC_KGIN."""
+    parser = argparse.ArgumentParser(description="RISC_KGIN")
+
+    # ===== dataset ===== #
+    parser.add_argument("--dataset", nargs="?", default="last-fm", help="Choose a dataset:[last-fm,movie,alibaba]")
+    parser.add_argument(
+        "--data_path", nargs="?", default="../data/", help="Input data path."
+    )
+
+    # ===== train ===== #
+    parser.add_argument('--epoch', type=int, default=1000, help='number of epochs')
+    parser.add_argument('--batch_size', type=int, default=4096, help='batch size')
+    parser.add_argument('--test_batch_size', type=int, default=4096, help='batch size')
+    parser.add_argument('--dim', type=int, default=64, help='embedding size')
+    parser.add_argument('--l2', type=float, default=1e-5, help='l2 regularization weight')
+    parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
+    parser.add_argument('--sim_regularity', type=float, default=1e-5, help='regularization weight for latent factor')
+    parser.add_argument("--inverse_r", type=bool, default=True, help="consider inverse relation or not")
+    parser.add_argument("--node_dropout", type=bool, default=True, help="consider node dropout or not")
+    parser.add_argument("--node_dropout_rate", type=float, default=0.5, help="ratio of node dropout")
+    parser.add_argument("--mess_dropout", type=bool, default=True, help="consider message dropout or not")
+    parser.add_argument("--mess_dropout_rate", type=float, default=0.1, help="ratio of message dropout")
+    parser.add_argument("--batch_test_flag", type=bool, default=True, help="use batched item testing")
+    parser.add_argument("--channel", type=int, default=64, help="hidden channels for model")
+    parser.add_argument("--cuda", type=bool, default=True, help="use gpu or not")
+    parser.add_argument("--gpu_id", type=int, default=0, help="gpu id")
+    parser.add_argument('--Ks', nargs='?', default='[5, 20]', help='Top-K values for evaluation')
+    parser.add_argument('--test_flag', nargs='?', default='part',
+                        help='Specify the test type from {part, full}')
+    parser.add_argument("--n_factors", type=int, default=4, help="number of latent factors for user preference")
+    parser.add_argument("--ind", type=str, default='distance', help="Independence modeling: mi, distance, cosine")
+
+    # ===== relation context ===== #
+    parser.add_argument('--context_hops', type=int, default=3, help='number of context hops in GCN')
+
+    # ===== save model ===== #
+    parser.add_argument("--save", type=bool, default=False, help="save model or not")
+    parser.add_argument("--out_dir", type=str, default="./weights/", help="output directory for model")
+
+    parser.add_argument("--training_log", type=bool, default=True, help="enable training log")
+
+    # ===== critiquing model ===== #
+    parser.add_argument('--cri_epoch', type=int, default=10, help='number of critiquing epochs')
+    parser.add_argument('--cri_batch_size', type=int, default=4096, help='critiquing batch size')
+    parser.add_argument('--cri_lr', type=float, default=0.001, help='critiquing learning rate')
+    parser.add_argument('--cri_key_rank_num', type=int, default=5, help='number of top critique keyphrases per user')
+    parser.add_argument('--count_nhop', type=int, default=1, help='number of hops for critiquing keyphrase extraction')
+    parser.add_argument('--rand_item_num', type=int, default=10, help='number of sampled items per critique keyphrase')
+
+    parser.add_argument('--imp_sample', type=str, default='gat', help='importance sampling method: cosine, gat')
+    parser.add_argument('--disjointed_constant', type=int, default=1000, help='constant for disjointed items jaccard score')
+    parser.add_argument('--jaccard_neib', type=int, default=1, help='neighbor hops for jaccard score')
+    parser.add_argument('--replay_decay', type=float, default=0.001, help='replay decay weight')
+    parser.add_argument('--replay_pairs_num', type=int, default=1, help='number of replay pairs per critiquing key')
+
+    return parser.parse_args()
